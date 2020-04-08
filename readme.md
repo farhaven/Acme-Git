@@ -18,3 +18,5 @@ This is a Git UI for the ACME text editor.
 - [ ] Allow launching in subdirectories
 	- Walk tree upwards to first `.git`
 	- Use that as the repo path
+- [ ] `Get` command to refresh display
+- [ ] Autorefresh on changes to the repo?
