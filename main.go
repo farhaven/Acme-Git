@@ -22,8 +22,6 @@ func winFatal(win *acme.Win, fmt string, args ...interface{}) {
 func refresh(win *acme.Win, repo *git.Repository) error {
 	win.Clear()
 
-	win.Fprintf("data", "got repo: %v\n\n", repo)
-
 	// Working tree status
 	tree, err := repo.Worktree()
 	if err != nil {
@@ -53,7 +51,7 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 	}
 	defer branches.Close()
 
-	win.Fprintf("data", "Branches:\n")
+	win.Fprintf("data", "Local branches:\n")
 	err = branches.ForEach(func(ref *plumbing.Reference) error {
 		extra := ""
 		if ref.Hash() == head.Hash() {
