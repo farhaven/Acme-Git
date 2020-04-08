@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"9fans.net/go/acme"
 	"github.com/go-git/go-git/v5"
@@ -13,6 +16,79 @@ import (
 func winFatal(win *acme.Win, fmt string, args ...interface{}) {
 	win.Errf(fmt, args...)
 	log.Fatalf(fmt, args...)
+}
+
+func refresh(win *acme.Win, repo *git.Repository) error {
+	win.Clear()
+
+	win.Fprintf("data", "got repo: %v\n\n", repo)
+
+	// Working tree status
+	tree, err := repo.Worktree()
+	if err != nil {
+		return fmt.Errorf("can't get work tree: %w", err)
+	}
+	status, err := tree.Status()
+	if err != nil {
+		return fmt.Errorf("can't get status: %w", err)
+	}
+
+	win.Fprintf("data", "Tree status:\n%s\n", status)
+
+	// List branches
+	branches, err := repo.Branches()
+	if err != nil {
+		return fmt.Errorf("can't get branches: %w", err)
+	}
+	defer branches.Close()
+
+	win.Fprintf("data", "Branches:\n")
+	err = branches.ForEach(func(ref *plumbing.Reference) error {
+		extra := ""
+		if ref.Hash() == head.Hash() {
+			extra = "(current)"
+		}
+		win.Fprintf("data", "\tCo %s %s\n", ref.Name(), extra)
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("can't list branches: %w", err)
+	}
+
+	win.Ctl("clean")
+
+	return nil
+}
+
+func doCheckout(win *acme.Win, repo *git.Repository, cmd string) error {
+	// TODO: Handle checking out commits and tags
+
+	parts := strings.Fields(cmd)
+	// Check if we have command `Co thing`
+	if len(parts) != 2 {
+		return fmt.Errorf("unexpected length of command: %d", len(parts))
+	}
+	if parts[0] != "Co" {
+		return fmt.Errorf("called for unexpected command")
+	}
+
+	// Check out existing branch
+	opts := git.CheckoutOptions{
+		Branch: plumbing.ReferenceName(parts[1]),
+		Keep:   true,
+	}
+
+	tree, err := repo.Worktree()
+	if err != nil {
+		return fmt.Errorf("can't get work tree: %w", err)
+	}
+
+	err = tree.Checkout(&opts)
+	if err != nil {
+		return fmt.Errorf("checkout failed: %w", err)
+	}
+
+	return refresh(win, repo)
 }
 
 func main() {
@@ -27,38 +103,62 @@ func main() {
 	}
 
 	win.Name("%s/-git", wd)
+	win.Fprintf("tag", "Get ")
 
 	repo, err := git.PlainOpen(".")
 	if err != nil {
 		winFatal(win, "can't open repo: %s", err)
 	}
 
-	win.Fprintf("data", "got repo: %v\n\n", repo)
-
-	// Working tree status
-	tree, err := repo.Worktree()
+	err = refresh(win, repo)
 	if err != nil {
-		winFatal(win, "can't get work tree: %s", err)
-	}
-	status, err := tree.Status()
-	if err != nil {
-		winFatal(win, "can't get status: %s", err)
+		winFatal(win, "can't refresh repo state: %s", err)
 	}
 
-	win.Fprintf("data", "Tree status:\n%s\n", status)
+	for event := range win.EventChan() {
+		code := fmt.Sprintf("%c%c", event.C1, event.C2)
 
-	// List branches
-	branches, err := repo.Branches()
-	if err != nil {
-		winFatal(win, "can't get branches: %s", err)
+		if event.C1 == 0x00 && event.C2 == 0x00 {
+			// Zero event
+			break
+		}
+
+		switch event.C1 {
+		case 'K', 'E', 'F':
+			continue
+		}
+
+		switch event.C2 {
+		case 'l', 'L':
+			err := win.WriteEvent(event)
+			if err != nil {
+				winFatal(win, "can't write event %#v: %w", event, err)
+			}
+			continue
+		case 'x', 'X':
+			// TODO: Deal with command args somehow?
+			switch true {
+			case string(event.Text) == "Get":
+				err = refresh(win, repo)
+				if err != nil {
+					winFatal(win, "can't refresh repo state: %s", err)
+				}
+				continue
+			case bytes.HasPrefix(event.Text, []byte("Co ")):
+				log.Println("running checkout command")
+				err = doCheckout(win, repo, string(event.Text))
+				if err != nil {
+					winFatal(win, "can't check out branch: %w", err)
+				}
+			default:
+				log.Printf("Execute: %q", event.Text)
+				err := win.WriteEvent(event)
+				if err != nil {
+					winFatal(win, "can't write event %#v: %w", event, err)
+				}
+			}
+		default:
+			log.Printf("got event with code %s: %#v", code, event)
+		}
 	}
-	defer branches.Close()
-
-	win.Fprintf("data", "Branches:\n")
-	branches.ForEach(func(ref *plumbing.Reference) error {
-		win.Fprintf("data", "\t%s\n", ref.Name())
-		return nil
-	})
-
-	win.Ctl("clean")
 }
