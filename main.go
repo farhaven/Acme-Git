@@ -139,8 +139,6 @@ func main() {
 	}
 
 	for event := range win.EventChan() {
-		code := fmt.Sprintf("%c%c", event.C1, event.C2)
-
 		if event.C1 == 0x00 && event.C2 == 0x00 {
 			// Zero event
 			break
@@ -188,6 +186,8 @@ func main() {
 				}
 			}
 		default:
+			code := fmt.Sprintf("%c%c", event.C1, event.C2)
+
 			log.Printf("got event with code %s: %#v", code, event)
 		}
 	}
