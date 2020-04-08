@@ -45,23 +45,44 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 	win.Fprintf("data", "    Head: %v\n", head)
 
 	// List branches
+	win.Fprintf("data", "Local branches:\n")
 	branches, err := repo.Branches()
 	if err != nil {
 		return fmt.Errorf("can't get branches: %w", err)
 	}
 	defer branches.Close()
 
-	win.Fprintf("data", "Local branches:\n")
 	err = branches.ForEach(func(ref *plumbing.Reference) error {
 		extra := ""
 		if ref.Hash() == head.Hash() {
-			extra = "(current)"
+			extra = " (current)"
 		}
-		win.Fprintf("data", "\tCo %s %s\n", ref.Name(), extra)
+		win.Fprintf("data", "\tCo %s%s\n", ref.Name(), extra)
 		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("can't list branches: %w", err)
+	}
+
+	// List tags
+	win.Fprintf("data", "Tags: NewTag␣\n")
+	tags, err := repo.Tags()
+	if err != nil {
+		return fmt.Errorf("can't get tags: %w", err)
+	}
+	defer tags.Close()
+
+	err = tags.ForEach(func(ref *plumbing.Reference) error {
+		// TODO: Show annotations?
+		extra := ""
+		if ref.Hash() == head.Hash() {
+			extra = " (current)"
+		}
+		win.Fprintf("data", "\tCo %s%s\n", ref.Name(), extra)
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("can't list tags: %w", err)
 	}
 
 	win.Ctl("clean")
@@ -120,6 +141,35 @@ func doCheckout(win *acme.Win, repo *git.Repository, cmd string) error {
 	}
 
 	return refresh(win, repo)
+}
+
+func doNewTag(win *acme.Win, repo *git.Repository, cmd string) error {
+	// TODO: Create annotated tags
+
+	parts := strings.Fields(cmd)
+	// Check if we have command `Co thing`
+	if len(parts) != 2 {
+		return fmt.Errorf("unexpected length of command: %d", len(parts))
+	}
+	if parts[0] != "NewTag" {
+		return fmt.Errorf("called for unexpected command")
+	}
+
+	// TODO: Tag message?
+	opts := git.CreateTagOptions{}
+
+	head, err := repo.Head()
+	if err != nil {
+		return fmt.Errorf("can't get repo head: %w", err)
+	}
+
+	tagRef, err := repo.CreateTag(parts[1], head.Hash(), &opts)
+	if err != nil {
+		return fmt.Errorf("can't create tag: %w", err)
+	}
+
+	log.Println("created tag with ref", tagRef)
+	return nil
 }
 
 func doInteractiveCommit(win *acme.Win, repo *git.Repository, cmd string) error {
@@ -202,6 +252,12 @@ func main() {
 				err = doInteractiveCommit(win, repo, string(event.Text))
 				if err != nil {
 					winFatal(win, "can't run interactive commit: %w", err)
+				}
+			case bytes.HasPrefix(event.Text, []byte("NewTag ")):
+				log.Println("running tag command")
+				err = doNewTag(win, repo, string(event.Text))
+				if err != nil {
+					winFatal(win, "can't create new tag: %w", err)
 				}
 			default:
 				log.Printf("Execute: %q", event.Text)
