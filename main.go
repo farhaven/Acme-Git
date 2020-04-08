@@ -152,12 +152,13 @@ func main() {
 		}
 
 		switch event.C2 {
+		case 'i', 'I', 'd', 'D':
+			// ignore
 		case 'l', 'L':
 			err := win.WriteEvent(event)
 			if err != nil {
 				winFatal(win, "can't write event %#v: %w", event, err)
 			}
-			continue
 		case 'x', 'X':
 			// TODO: Deal with command args somehow?
 			switch true {
