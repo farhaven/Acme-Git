@@ -3,7 +3,7 @@
 This is a Git UI for the ACME text editor.
 
 ## TODO list
-- [ ] show local branches
+- [x] show local branches
 - [ ] allow checking out other branches
 - [ ] show stashes
 - [ ] allow popping/creating new stashes
