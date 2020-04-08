@@ -64,6 +64,12 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 		return fmt.Errorf("can't list branches: %w", err)
 	}
 
+	win.Ctl("clean")
+
+	return nil
+}
+
+func listRemotes(win *acme.Win, repo *git.Repository) error {
 	// Remote branches
 	win.Fprintf("data", "Remote branches:\n")
 	remotes, err := repo.Remotes()
@@ -140,7 +146,7 @@ func main() {
 	}
 
 	win.Name("%s/-git", wd)
-	win.Fprintf("tag", "Get ")
+	win.Fprintf("tag", "Get Remotes ")
 
 	repo, err := git.PlainOpen(".")
 	if err != nil {
@@ -185,6 +191,11 @@ func main() {
 				err = doCheckout(win, repo, string(event.Text))
 				if err != nil {
 					winFatal(win, "can't check out branch: %w", err)
+				}
+			case bytes.Equal(event.Text, []byte("Remotes")):
+				err = listRemotes(win, repo)
+				if err != nil {
+					winFatal(win, "can't list remotes: %w", err)
 				}
 			case bytes.Equal(event.Text, []byte("Ci")):
 				log.Println("interactive commit")
