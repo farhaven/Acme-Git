@@ -34,7 +34,17 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 		return fmt.Errorf("can't get status: %w", err)
 	}
 
-	win.Fprintf("data", "Tree status:\n%s\n", status)
+	if status.IsClean() {
+		win.Fprintf("data", "Tree is clean\n")
+	} else {
+		win.Fprintf("data", "Tree status: Ci\n%s\n", status)
+	}
+
+	head, err := repo.Head()
+	if err != nil {
+		return fmt.Errorf("can't get repo head: %w", err)
+	}
+	win.Fprintf("data", "    Head: %v\n", head)
 
 	// List branches
 	branches, err := repo.Branches()
