@@ -35,7 +35,7 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 	}
 
 	if status.IsClean() {
-		win.Fprintf("data", "Tree is clean\n")
+		win.Fprintf("data", "Tree is clean\n\n")
 	} else {
 		win.Fprintf("data", "Tree status: Ci\n%s\n", status)
 	}
