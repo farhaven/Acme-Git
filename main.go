@@ -66,6 +66,22 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 		return fmt.Errorf("can't list branches: %w", err)
 	}
 
+	// Remote branches
+	win.Fprintf("data", "Remote branches:\n")
+	remotes, err := repo.Remotes()
+	if err != nil {
+		return fmt.Errorf("can't get remotes: %w", err)
+	}
+	for _, remote := range remotes {
+		remoteBranches, err := remote.List(&git.ListOptions{})
+		if err != nil {
+			return fmt.Errorf("can't list remote branches for %s: %w", remote.Config().Name, err)
+		}
+		for _, ref := range remoteBranches {
+			win.Fprintf("data", "\tRCo %s %s\n", remote.Config().Name, ref.Name())
+		}
+	}
+
 	win.Ctl("clean")
 
 	return nil
