@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 
 	"9fans.net/go/acme"
@@ -91,6 +92,18 @@ func doCheckout(win *acme.Win, repo *git.Repository, cmd string) error {
 	return refresh(win, repo)
 }
 
+func doInteractiveCommit(win *acme.Win, repo *git.Repository, cmd string) error {
+	// TODO: make sure the working directory is properly set
+	// TODO: convince git commit to use acme as the editor (plumb edit?)
+	command := exec.Command("win", "git", "commit", "-s", "--interactive")
+	err := command.Run()
+	if err != nil {
+		return fmt.Errorf("can't run interactive git commit: %w", err)
+	}
+
+	return refresh(win, repo)
+}
+
 func main() {
 	win, err := acme.New()
 	if err != nil {
@@ -149,6 +162,12 @@ func main() {
 				err = doCheckout(win, repo, string(event.Text))
 				if err != nil {
 					winFatal(win, "can't check out branch: %w", err)
+				}
+			case bytes.Equal(event.Text, []byte("Ci")):
+				log.Println("interactive commit")
+				err = doInteractiveCommit(win, repo, string(event.Text))
+				if err != nil {
+					winFatal(win, "can't run interactive commit: %w", err)
 				}
 			default:
 				log.Printf("Execute: %q", event.Text)
