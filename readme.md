@@ -4,7 +4,11 @@ This is a Git UI for the ACME text editor.
 
 ## TODO list
 - [x] show local branches
-- [ ] allow checking out other branches
+- [x] allow checking out other branches
+- [ ] easy creation of local branches
+- [ ] show remote branches
+- [ ] easy checkout of remote branches
+	- combine `git checkout origin/foo` and `git checkout -b foo`
 - [ ] show stashes
 - [ ] allow popping/creating new stashes
 - [ ] clean up merged branches
@@ -14,9 +18,8 @@ This is a Git UI for the ACME text editor.
 - [ ] push tags, branches
 - [ ] fetch?␣push?
 - [ ] notes?
-- [ ] Move my local Gci wrapper in here?
 - [ ] Allow launching in subdirectories
 	- Walk tree upwards to first `.git`
 	- Use that as the repo path
-- [ ] `Get` command to refresh display
+- [x] `Get` command to refresh display
 - [ ] Autorefresh on changes to the repo?
