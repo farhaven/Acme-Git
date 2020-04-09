@@ -7,10 +7,12 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"9fans.net/go/acme"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 // winFatal writes a formatted message to win's Error window and calls log.Fatalf
@@ -65,7 +67,7 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 	}
 
 	// List tags
-	win.Fprintf("data", "Tags: NewTag␣\n")
+	win.Fprintf("data", "Tags: NewTag foo\n")
 	tags, err := repo.Tags()
 	if err != nil {
 		return fmt.Errorf("can't get tags: %w", err)
@@ -155,8 +157,17 @@ func doNewTag(win *acme.Win, repo *git.Repository, cmd string) error {
 		return fmt.Errorf("called for unexpected command")
 	}
 
+	tagger := object.Signature{
+		Name:  "XXX",             // TODO
+		Email: "xxx@example.com", // TODO
+		When:  time.Now(),
+	}
+
 	// TODO: Tag message?
-	opts := git.CreateTagOptions{}
+	opts := git.CreateTagOptions{
+		Tagger: &tagger,
+		Message: fmt.Sprintf("Tag %s", parts[1]), // TODO: Prompt for message?
+	}
 
 	head, err := repo.Head()
 	if err != nil {
