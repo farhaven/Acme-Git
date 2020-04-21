@@ -107,7 +107,7 @@ func listRemotes(win *acme.Win, repo *git.Repository) error {
 			return fmt.Errorf("can't list remote branches for %s: %w", remote.Config().Name, err)
 		}
 		for _, ref := range remoteBranches {
-			win.Fprintf("data", "\tRCo %s %s\n", remote.Config().Name, ref.Name())
+			win.Fprintf("data", "\tRCo %s %s\n", remote.Config().Name, strings.TrimPrefix(ref.Name().String(), "refs/heads/"))
 		}
 	}
 
