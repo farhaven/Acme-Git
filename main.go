@@ -44,7 +44,8 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 	if err != nil {
 		return fmt.Errorf("can't get repo head: %w", err)
 	}
-	win.Fprintf("data", "    Head: %v\n", head)
+	win.Fprintf("data", "\tHead: %v\n", head.Hash())
+	win.Fprintf("data", "\t      %v\n\n", head.Name())
 
 	// List branches
 	win.Fprintf("data", "Local branches:\n")
@@ -67,7 +68,7 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 	}
 
 	// List tags
-	win.Fprintf("data", "Tags: NewTag \n")
+	win.Fprintf("data", "\nTags: NewTag \n")
 	tags, err := repo.Tags()
 	if err != nil {
 		return fmt.Errorf("can't get tags: %w", err)
