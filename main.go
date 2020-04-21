@@ -44,8 +44,9 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 	if err != nil {
 		return fmt.Errorf("can't get repo head: %w", err)
 	}
-	win.Fprintf("data", "\tHead: %v\n", head.Hash())
-	win.Fprintf("data", "\t      %v\n\n", head.Name())
+	win.Fprintf("data", "Head:\n")
+	win.Fprintf("data", "\t%s\n", head.Hash())
+	win.Fprintf("data", "\t%s\n\n", head.Name())
 
 	// List branches
 	win.Fprintf("data", "Local branches:\n")
