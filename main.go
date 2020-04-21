@@ -16,9 +16,10 @@ import (
 )
 
 // winFatal writes a formatted message to win's Error window and calls log.Fatalf
-func winFatal(win *acme.Win, fmt string, args ...interface{}) {
-	win.Errf(fmt, args...)
-	log.Fatalf(fmt, args...)
+func winFatal(win *acme.Win, msg string, args ...interface{}) {
+	err := fmt.Errorf(msg, args...)
+	win.Errf("%s", err)
+	log.Fatalf("%s", err)
 }
 
 func refresh(win *acme.Win, repo *git.Repository) error {
@@ -198,7 +199,7 @@ func doInteractiveCommit(win *acme.Win, repo *git.Repository, cmd string) error 
 func main() {
 	win, err := acme.New()
 	if err != nil {
-		log.Fatalln("can't open ACME window: %s", err)
+		log.Fatalf("can't open ACME window: %s", err)
 	}
 
 	wd, err := os.Getwd()
