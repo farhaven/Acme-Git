@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -240,32 +239,34 @@ func main() {
 				winFatal(win, "can't write event %#v: %w", event, err)
 			}
 		case 'x', 'X':
+			txt := strings.TrimLeft(string(event.Text), " \t")
+
 			// TODO: Deal with command args somehow?
 			switch true {
-			case string(event.Text) == "Get":
+			case txt == "Get":
 				err = refresh(win, repo)
 				if err != nil {
 					winFatal(win, "can't refresh repo state: %s", err)
 				}
 				continue
-			case bytes.HasPrefix(event.Text, []byte("Co ")):
+			case strings.HasPrefix(txt, "Co "):
 				log.Println("running checkout command")
 				err = doCheckout(win, repo, string(event.Text))
 				if err != nil {
 					winFatal(win, "can't check out branch: %w", err)
 				}
-			case bytes.Equal(event.Text, []byte("Remotes")):
+			case strings.HasPrefix(txt, "Remotes"):
 				err = listRemotes(win, repo)
 				if err != nil {
 					winFatal(win, "can't list remotes: %w", err)
 				}
-			case bytes.Equal(event.Text, []byte("Ci")):
+			case strings.HasPrefix(txt, "Ci"):
 				log.Println("interactive commit")
 				err = doInteractiveCommit(win, repo, string(event.Text))
 				if err != nil {
 					winFatal(win, "can't run interactive commit: %w", err)
 				}
-			case bytes.HasPrefix(event.Text, []byte("NewTag ")):
+			case strings.HasPrefix(txt, "NewTag "):
 				log.Println("running tag command")
 				err = doNewTag(win, repo, string(event.Text))
 				if err != nil {
