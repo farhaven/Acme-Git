@@ -166,7 +166,7 @@ func doNewTag(win *acme.Win, repo *git.Repository, cmd string) error {
 
 	// TODO: Tag message?
 	opts := git.CreateTagOptions{
-		Tagger: &tagger,
+		Tagger:  &tagger,
 		Message: fmt.Sprintf("Tag %s", parts[1]), // TODO: Prompt for message?
 	}
 
