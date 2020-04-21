@@ -68,7 +68,7 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 	}
 
 	// List tags
-	win.Fprintf("data", "Tags: NewTag foo\n")
+	win.Fprintf("data", "Tags: NewTag \n")
 	tags, err := repo.Tags()
 	if err != nil {
 		return fmt.Errorf("can't get tags: %w", err)
