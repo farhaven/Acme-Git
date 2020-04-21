@@ -61,7 +61,7 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 		if ref.Hash() == head.Hash() {
 			extra = " (current)"
 		}
-		win.Fprintf("data", "\tCo %s%s\n", ref.Name(), extra)
+		win.Fprintf("data", "\tCo %s%s\n", strings.TrimPrefix(ref.Name().String(), "refs/heads/"), extra)
 		return nil
 	})
 	if err != nil {
@@ -82,7 +82,7 @@ func refresh(win *acme.Win, repo *git.Repository) error {
 		if ref.Hash() == head.Hash() {
 			extra = " (current)"
 		}
-		win.Fprintf("data", "\tCo %s%s\n", ref.Name(), extra)
+		win.Fprintf("data", "\tCo %s%s\n", strings.TrimPrefix(ref.Name().String(), "refs/tags/"), extra)
 		return nil
 	})
 	if err != nil {
