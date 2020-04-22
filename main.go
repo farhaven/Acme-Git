@@ -209,7 +209,7 @@ func main() {
 	}
 
 	win.Name("%s/-git", wd)
-	win.Fprintf("tag", "Get Remotes ")
+	win.Fprintf("tag", "Get Remotes [git push] [git reset --hard] ")
 
 	repo, err := git.PlainOpen(".")
 	if err != nil {
